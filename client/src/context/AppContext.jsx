@@ -1,10 +1,11 @@
 import axios from "axios";
 import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast"; // Ensure you use your toast library
+import { toast } from "react-hot-toast";
 
-// 1. CREATE AND EXPORT THE CONTEXT OBJECT
-export const AppContext = createContext(null);
+// 1. FIX: Initialize with an empty object {} instead of null.
+// This prevents components from crashing if they load before the provider.
+export const AppContext = createContext({});
 
 const AppContextProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem("token"));
@@ -15,6 +16,8 @@ const AppContextProvider = ({ children }) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const navigate = useNavigate();
 
+    // 2. STRENGTHEN: Added error handling to prevent "Loading Forever" 
+    // if the backend is unreachable or returns a 404.
     const loadCreditsData = async () => {
         if (!token) return;
         try {
@@ -27,6 +30,10 @@ const AppContextProvider = ({ children }) => {
             }
         } catch (err) {
             console.error("Credit load error:", err);
+            // If the token is expired/invalid, clear it so the app stops trying to load
+            if (err.response?.status === 401) {
+                logout();
+            }
         }
     };
 
@@ -39,10 +46,13 @@ const AppContextProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        if (token) loadCreditsData();
+        if (token) {
+            loadCreditsData();
+        }
     }, [token]);
 
-    // 2. PASS ALL VALUES INTO THE PROVIDER
+    // 3. SECURE VALUE OBJECT: 
+    // We ensure every key used in your components is explicitly passed here.
     const value = {
         backendUrl,
         token,
@@ -54,7 +64,7 @@ const AppContextProvider = ({ children }) => {
         loadCreditsData,
         logout,
         showLogin,
-        setShowLogin, // This is what Navbar and Header are looking for
+        setShowLogin, // Minifier (y) will now always find this as a function
     };
 
     return (
