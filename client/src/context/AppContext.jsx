@@ -3,8 +3,7 @@ import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
-// 1. FIX: Initialize with an empty object {} instead of null.
-// This prevents components from crashing if they load before the provider.
+// 1. Initialize with an empty object to prevent destructuring errors
 export const AppContext = createContext({});
 
 const AppContextProvider = ({ children }) => {
@@ -16,8 +15,6 @@ const AppContextProvider = ({ children }) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const navigate = useNavigate();
 
-    // 2. STRENGTHEN: Added error handling to prevent "Loading Forever" 
-    // if the backend is unreachable or returns a 404.
     const loadCreditsData = async () => {
         if (!token) return;
         try {
@@ -30,10 +27,30 @@ const AppContextProvider = ({ children }) => {
             }
         } catch (err) {
             console.error("Credit load error:", err);
-            // If the token is expired/invalid, clear it so the app stops trying to load
-            if (err.response?.status === 401) {
-                logout();
+            if (err.response?.status === 401) logout();
+        }
+    };
+
+    // 2. ADDED: generateImage function. 
+    // Your Result page is looking for this. If it's missing, you get the 'y' error.
+    const generateImage = async (prompt) => {
+        try {
+            const { data } = await axios.post(
+                `${backendUrl}/image/generate-image`, 
+                { prompt }, 
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (data.success) {
+                loadCreditsData(); // Refresh credits after successful generation
+                return data.image; // Return the image URL/base64
+            } else {
+                toast.error(data.message);
+                return null;
             }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Generation failed");
+            return null;
         }
     };
 
@@ -46,13 +63,9 @@ const AppContextProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        if (token) {
-            loadCreditsData();
-        }
+        if (token) loadCreditsData();
     }, [token]);
 
-    // 3. SECURE VALUE OBJECT: 
-    // We ensure every key used in your components is explicitly passed here.
     const value = {
         backendUrl,
         token,
@@ -64,7 +77,8 @@ const AppContextProvider = ({ children }) => {
         loadCreditsData,
         logout,
         showLogin,
-        setShowLogin, // Minifier (y) will now always find this as a function
+        setShowLogin,
+        generateImage, // 3. CRITICAL: Pass this so Result.jsx can use it
     };
 
     return (
