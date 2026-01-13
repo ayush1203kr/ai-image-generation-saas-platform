@@ -6,19 +6,25 @@ import imageRouter from "./routes/imageRoutes.js";
 
 const app = express();
 
-// 1. MANUAL CORS MIDDLEWARE (MUST BE AT THE TOP)
+/**
+ * DYNAMIC CORS - The Permanent Fix
+ * This mirrors whatever port your local machine uses.
+ */
 app.use((req, res, next) => {
-    // This matches the 'Referer' seen in your screenshot
-    res.header("Access-Control-Allow-Origin", "http://localhost:5175");
+    const origin = req.headers.origin;
+    
+    // Automatically allow any localhost port
+    if (origin && origin.startsWith('http://localhost:')) {
+        res.header("Access-Control-Allow-Origin", origin);
+    }
+    
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-rtb-fingerprint-id");
     res.header("Access-Control-Allow-Credentials", "true");
 
-    // 2. IMMEDIATE RESPONSE FOR PREFLIGHT (OPTIONS)
-    // This fixes the 'Response Headers (0)' issue in your screenshot
+    // Handle Preflight
     if (req.method === "OPTIONS") {
-        console.log(`✅ CORS Preflight handled for: ${req.url}`);
-        return res.status(204).send(); 
+        return res.status(200).json({});
     }
     next();
 });
@@ -28,17 +34,16 @@ app.use(express.json());
 const startServer = async () => {
     try {
         await connectDB();
-        console.log("✅ Database Connected");
+        console.log("✅ MongoDB Connected");
 
         app.use("/api/users", userRouter);
         app.use("/api/image", imageRouter);
 
-        app.get("/", (req, res) => res.send("API is Live on AWS"));
+        app.get("/", (req, res) => res.send("API is Live"));
 
         const PORT = process.env.PORT || 4000;
-        // Bind to 0.0.0.0 is mandatory for AWS accessibility
         app.listen(PORT, '0.0.0.0', () => {
-            console.log(`🚀 Server fully live on http://65.1.107.122:${PORT}`);
+            console.log(`🚀 Server running on http://65.1.107.122:${PORT}`);
         });
     } catch (error) {
         console.error("❌ Startup Error:", error.message);
