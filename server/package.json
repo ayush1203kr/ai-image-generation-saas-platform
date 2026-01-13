@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "server.js",
   "type": "module",
- "scripts": {
-  "start": "node --env-file=.env server.js",
-  "server": "nodemon --env-file=.env server.js"
-},
+  "scripts": {
+    "start": "node --env-file=.env server.js",
+    "server": "nodemon --env-file=.env server.js"
+  },
   "author": "",
   "license": "ISC",
   "description": "",

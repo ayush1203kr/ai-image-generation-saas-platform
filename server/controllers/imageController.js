@@ -1,33 +1,22 @@
 import userModel from "../models/userModel.js";
 import FormData from "form-data";
 import axios from "axios";
- console.log("ClipDrop key length:", process.env.CLIPDROP_API?.length);
 
 export const generateImage = async (req, res) => {
   try {
-    const userId = req.userId;           // ✅ FIX 1
+    const userId = req.userId; 
     const { prompt } = req.body;
 
     if (!prompt) {
-      return res.json({
-        success: false,
-        message: "Prompt is required",
-      });
+      return res.json({ success: false, message: "Prompt is required" });
     }
 
     const user = await userModel.findById(userId);
-    if (!user) {
-      return res.json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    if (user.creditBalance <= 0) {
-      return res.json({
-        success: false,
-        message: "Insufficient credits",
-        creditBalance: user.creditBalance,
+    if (!user || user.creditBalance <= 0) {
+      return res.json({ 
+        success: false, 
+        message: user ? "Insufficient credits" : "User not found",
+        creditBalance: user?.creditBalance 
       });
     }
 
@@ -39,7 +28,7 @@ export const generateImage = async (req, res) => {
       formData,
       {
         headers: {
-          ...formData.getHeaders(),       // ✅ FIX 2
+          ...formData.getHeaders(),
           "x-api-key": process.env.CLIPDROP_API,
         },
         responseType: "arraybuffer",
@@ -52,17 +41,16 @@ export const generateImage = async (req, res) => {
     user.creditBalance -= 1;
     await user.save();
 
+    // ✅ FIX: Changed 'resultImage' to 'image' to match your Frontend/AppContext expectations
     res.json({
       success: true,
       message: "Image Generated",
       creditBalance: user.creditBalance,
-      resultImage,
+      image: resultImage, 
     });
+
   } catch (error) {
     console.log("Image generation error:", error.message);
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.json({ success: false, message: error.message });
   }
 };
