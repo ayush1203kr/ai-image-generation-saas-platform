@@ -10,36 +10,38 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { setShowLogin, backendUrl, setToken, setUser, loadCreditsData } =
+  const { backendUrl, setToken, setUser, loadCreditsData, setShowLogin } =
     useContext(AppContext);
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
     try {
-      const url =
-        state === "Login"
-          ? `${backendUrl}/users/login`
-          : `${backendUrl}/users/register`;
+      const endpoint =
+        state === "Login" ? "/users/login" : "/users/register";
 
       const payload =
         state === "Login"
           ? { email, password }
           : { name, email, password };
 
-      const { data } = await axios.post(url, payload);
+      const { data } = await axios.post(
+        `${backendUrl}${endpoint}`,
+        payload
+      );
 
       if (data.success) {
         localStorage.setItem("token", data.token);
         setToken(data.token);
         setUser(data.user);
-        await loadCreditsData(); // 🔥 IMPORTANT
+        await loadCreditsData();
         setShowLogin(false);
+        toast.success(`Welcome ${data.user.name}`);
       } else {
         toast.error(data.message);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Request failed");
     }
   };
 
@@ -114,7 +116,7 @@ function Login() {
         <img
           src={assets.cross_icon}
           onClick={() => setShowLogin(false)}
-          className="absolute top-4 right-4 cursor-pointer"
+          className="absolute top-4 right-4 cursor-pointer w-3"
         />
       </form>
     </div>
