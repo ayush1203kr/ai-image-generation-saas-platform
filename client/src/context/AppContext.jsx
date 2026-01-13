@@ -14,50 +14,40 @@ const AppContextProvider = ({ children }) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
 
-  // ================= LOAD CREDITS =================
   const loadCreditsData = async () => {
     if (!token) return;
-
     try {
-      const { data } = await axios.get(
-        `${backendUrl}/api/users/credits`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const { data } = await axios.get(`${backendUrl}/users/credits`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (data.success) {
         setCredit(data.credits);
         setUser(data.user);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error loading credits:", error);
     }
   };
 
-  // ================= GENERATE IMAGE =================
   const generateImage = async (prompt) => {
-    if (!prompt) return null;
+    if (!prompt || !token) {
+        toast.error("Please login to generate images");
+        return null;
+    }
 
     try {
       const { data } = await axios.post(
-        `${backendUrl}/api/image/generate-image`,
+        `${backendUrl}/image/generate-image`,
         { prompt },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (data.success) {
-        await loadCreditsData(); // 🔥 IMPORTANT
+        await loadCreditsData();
         return data.resultImage;
       } else {
         toast.error(data.message);
-        await loadCreditsData();
         return null;
       }
     } catch (error) {
@@ -66,16 +56,15 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  // ================= LOGOUT =================
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
     setCredit(0);
     navigate("/");
+    toast.success("Logged out successfully");
   };
 
-  // ================= AUTO LOAD =================
   useEffect(() => {
     if (token) {
       loadCreditsData();
@@ -83,25 +72,17 @@ const AppContextProvider = ({ children }) => {
   }, [token]);
 
   const value = {
-    user,
-    setUser,
-    showLogin,
-    setShowLogin,
+    user, setUser,
+    showLogin, setShowLogin,
     backendUrl,
-    token,
-    setToken,
-    credit,
-    setCredit,
+    token, setToken,
+    credit, setCredit,
     loadCreditsData,
     logout,
     generateImage,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export default AppContextProvider;

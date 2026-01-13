@@ -19,8 +19,8 @@ function Login() {
     try {
       const url =
         state === "Login"
-          ? `${backendUrl}/api/users/login`
-          : `${backendUrl}/api/users/register`;
+          ? `${backendUrl}/users/login`
+          : `${backendUrl}/users/register`;
 
       const payload =
         state === "Login"
