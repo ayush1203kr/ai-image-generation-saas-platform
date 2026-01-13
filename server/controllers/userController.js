@@ -71,12 +71,18 @@ const userCredits = async (req, res) => {
 };
 
 /* ===============================
-   RAZORPAY SETUP
+   RAZORPAY (LAZY INIT ✅)
 ================================ */
-const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const getRazorpayInstance = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new Error("Razorpay keys missing in environment");
+  }
+
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+};
 
 /* ===============================
    CREATE ORDER
@@ -119,7 +125,9 @@ const paymentRazorpay = async (req, res) => {
       credits,
     });
 
-    const order = await razorpayInstance.orders.create({
+    const razorpay = getRazorpayInstance();
+
+    const order = await razorpay.orders.create({
       amount: amount * 100,
       currency: process.env.CURRENCY,
       receipt: transaction._id.toString(),
@@ -146,7 +154,6 @@ const verifyRazorpay = async (req, res) => {
       return res.json({ success: false, message: "Missing payment data" });
     }
 
-    // 🔐 Verify signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -157,7 +164,9 @@ const verifyRazorpay = async (req, res) => {
       return res.json({ success: false, message: "Invalid signature" });
     }
 
-    const order = await razorpayInstance.orders.fetch(razorpay_order_id);
+    const razorpay = getRazorpayInstance();
+
+    const order = await razorpay.orders.fetch(razorpay_order_id);
     const transaction = await transactionModel.findById(order.receipt);
 
     if (!transaction || transaction.payment) {

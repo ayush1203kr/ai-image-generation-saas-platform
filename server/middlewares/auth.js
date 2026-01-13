@@ -1,3 +1,4 @@
+/* ✅ Verified auth.js Middleware */
 import jwt from "jsonwebtoken";
 
 const userAuth = async (req, res, next) => {
@@ -14,7 +15,9 @@ const userAuth = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.userId = decoded.id;
+    // This MUST match what the controller looks for
+    req.userId = decoded.id; 
+    
     next();
   } catch (error) {
     res.status(401).json({
