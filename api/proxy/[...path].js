@@ -1,24 +1,64 @@
-export default async function handler(req, res) {
-  const { path = [] } = req.query;
+import axios from "axios";
+import { createContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-  // REMOVED /api/ from the middle because it comes from the 'path' variable
-  const backendUrl = `http://65.1.107.122:4000/${path.join("/")}`;
+export const AppContext = createContext(null);
 
-  try {
-    const response = await fetch(backendUrl, {
-      method: req.method,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": req.headers.authorization || "",
-      },
-      body: req.method === "GET" || req.method === "HEAD" 
-            ? null 
-            : JSON.stringify(req.body),
-    });
+const AppContextProvider = ({ children }) => {
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [user, setUser] = useState(null);
+  const [credit, setCredit] = useState(0);
+  const [showLogin, setShowLogin] = useState(false); // New state
 
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Proxy error" });
-  }
-}
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const navigate = useNavigate();
+
+  const loadCreditsData = async () => {
+    if (!token) return;
+    try {
+      const { data } = await axios.get(`${backendUrl}/users/credits`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        setCredit(data.credits);
+        setUser(data.user);
+      }
+    } catch (err) {
+      console.error("Credit load error:", err);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+    setCredit(0);
+    navigate("/");
+  };
+
+  useEffect(() => {
+    if (token) loadCreditsData();
+  }, [token]);
+
+  return (
+    <AppContext.Provider
+      value={{
+        backendUrl,
+        token,
+        setToken,
+        user,
+        setUser,
+        credit,
+        setCredit,
+        loadCreditsData,
+        logout,
+        showLogin,    // ADDED
+        setShowLogin, // ADDED: This fixes the 'a is not a function' error
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export default AppContextProvider;

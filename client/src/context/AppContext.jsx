@@ -1,13 +1,13 @@
 import axios from "axios";
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-export const AppContext = createContext(null);
+import { AppContext } from "./AppContextCreate";
 
 const AppContextProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
   const [credit, setCredit] = useState(0);
+  const [showLogin, setShowLogin] = useState(false); // New state
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
@@ -15,13 +15,9 @@ const AppContextProvider = ({ children }) => {
   const loadCreditsData = async () => {
     if (!token) return;
     try {
-      const { data } = await axios.get(
-        `${backendUrl}/users/credits`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const { data } = await axios.get(`${backendUrl}/users/credits`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (data.success) {
         setCredit(data.credits);
         setUser(data.user);
@@ -52,8 +48,11 @@ const AppContextProvider = ({ children }) => {
         user,
         setUser,
         credit,
+        setCredit,
         loadCreditsData,
         logout,
+        showLogin,    // ADDED
+        setShowLogin, // ADDED: This fixes the 'a is not a function' error
       }}
     >
       {children}
