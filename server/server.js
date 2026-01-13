@@ -6,15 +6,16 @@ import imageRouter from "./routes/imageRoutes.js";
 
 const app = express();
 
-/**
- * DYNAMIC CORS - The Permanent Fix
- * This mirrors whatever port your local machine uses.
- */
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    
-    // Automatically allow any localhost port
-    if (origin && origin.startsWith('http://localhost:')) {
+    const allowedOrigins = [
+        'http://localhost:5173', 
+        'http://localhost:5174', 
+        'http://localhost:5175',
+        'https://ai-image-generation-saas-platform.vercel.app' // Add your Vercel URL here
+    ];
+
+    if (allowedOrigins.includes(origin) || (origin && origin.startsWith('http://localhost:'))) {
         res.header("Access-Control-Allow-Origin", origin);
     }
     
@@ -22,7 +23,6 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-rtb-fingerprint-id");
     res.header("Access-Control-Allow-Credentials", "true");
 
-    // Handle Preflight
     if (req.method === "OPTIONS") {
         return res.status(200).json({});
     }
