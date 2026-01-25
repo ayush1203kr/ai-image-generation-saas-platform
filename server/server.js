@@ -1,5 +1,6 @@
 import express from "express";
 import "dotenv/config";
+
 import connectDB from "./config/mongodb.js";
 import userRouter from "./routes/userRouter.js";
 import imageRouter from "./routes/imageRoutes.js";
@@ -8,29 +9,34 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 /* ===============================
-   CORS — MANUAL & BULLETPROOF
+   MANUAL CORS (NO cors PACKAGE)
+   - Allows localhost
+   - Allows ALL *.vercel.app
+   - Works with credentials
+   - Handles OPTIONS properly
 ================================ */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  // Allow localhost (dev)
+  // Allow localhost (dev) and all Vercel domains (preview + prod)
   if (
-    origin?.startsWith("http://localhost") ||
-    origin?.endsWith(".vercel.app")
+    origin &&
+    (origin.startsWith("http://localhost") ||
+      origin.endsWith(".vercel.app"))
   ) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header(
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
       "Access-Control-Allow-Methods",
       "GET,POST,PUT,DELETE,OPTIONS"
     );
-    res.header(
+    res.setHeader(
       "Access-Control-Allow-Headers",
       "Content-Type, Authorization"
     );
   }
 
-  // Handle preflight
+  // Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -39,7 +45,7 @@ app.use((req, res, next) => {
 });
 
 /* ===============================
-   MIDDLEWARE
+   BODY PARSER
 ================================ */
 app.use(express.json());
 
