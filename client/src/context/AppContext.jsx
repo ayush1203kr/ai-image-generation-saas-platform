@@ -22,7 +22,7 @@ const AppContextProvider = ({ children }) => {
 
     try {
       const { data } = await axios.get(
-        `${backendUrl}/users/credits`,
+        `${backendUrl}/api/users/credits`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -51,7 +51,7 @@ const AppContextProvider = ({ children }) => {
 
     try {
       const { data } = await axios.post(
-        `${backendUrl}/image/generate-image`,
+        `${backendUrl}/api/image/generate-image`,
         { prompt },
         {
           headers: {

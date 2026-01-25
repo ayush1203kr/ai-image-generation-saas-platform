@@ -18,7 +18,7 @@ function Login() {
 
     try {
       const endpoint =
-        state === "Login" ? "/users/login" : "/users/register";
+        state === "Login" ? "/api/users/login" : "/api/users/register";
 
       const payload =
         state === "Login"
