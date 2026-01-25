@@ -13,21 +13,14 @@ const PORT = process.env.PORT || 4000;
    CORS — FINAL & BULLETPROOF
 ================================ */
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // curl, server-side
-    if (origin.startsWith("http://localhost")) return callback(null, true);
-    if (origin.endsWith(".vercel.app")) return callback(null, true);
-    return callback(new Error("Not allowed by CORS"));
-  },
+  origin: true, // 🔥 IMPORTANT: reflect request origin
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
-
-/* 🔥 THIS IS CRITICAL */
-app.options("*", cors(corsOptions)); // <-- handles preflight properly
+app.options("*", cors(corsOptions));
 
 /* ===============================
    MIDDLEWARE
