@@ -1,5 +1,5 @@
-export default async function handler(req, res) {
-  const { path = [] } = req.query;
+module.exports = async (req, res) => {
+  const path = req.query.path || [];
   const backendUrl = `http://65.1.107.122:4000/api/${path.join("/")}`;
 
   try {
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
     const text = await response.text();
     res.status(response.status).send(text);
-  } catch {
+  } catch (err) {
     res.status(500).json({ success: false, message: "Proxy failed" });
   }
-}
+};
