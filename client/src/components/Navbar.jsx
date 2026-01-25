@@ -19,8 +19,10 @@ function Navbar() {
             onClick={() => navigate("/buy")}
             className="flex items-center gap-2 bg-blue-100 px-5 py-2 rounded-full"
           >
-            <img src={assets.credit_star} className="w-5" />
-            <span className="text-sm">Credits: {credit}</span>
+            <img src={assets.credit_star} className="w-5" alt="" />
+            <span className="text-sm">
+              Credits: {credit ?? 0}
+            </span>
           </button>
 
           <p className="hidden sm:block">Hi, {user.name}</p>
