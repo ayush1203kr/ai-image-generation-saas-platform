@@ -31,7 +31,7 @@ const BuyCredit = () => {
   try {
     // 🔐 Verify payment
     await axios.post(
-      backendUrl + "/users/verify-razor",
+      backendUrl + "/api/users/verify-razor",
       response,
       {
         headers: {
@@ -79,7 +79,7 @@ const BuyCredit = () => {
       setLoading(true);
 
       const { data } = await axios.post(
-        backendUrl + '/users/pay-razor',
+        backendUrl + '/api/users/pay-razor',
         { planId },
         {
           headers: {
