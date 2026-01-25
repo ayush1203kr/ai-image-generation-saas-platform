@@ -1,7 +1,5 @@
 import express from "express";
-import cors from "cors";
 import "dotenv/config";
-
 import connectDB from "./config/mongodb.js";
 import userRouter from "./routes/userRouter.js";
 import imageRouter from "./routes/imageRoutes.js";
@@ -10,17 +8,35 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 /* ===============================
-   CORS — FINAL & BULLETPROOF
+   CORS — MANUAL & BULLETPROOF
 ================================ */
-const corsOptions = {
-  origin: true, // 🔥 IMPORTANT: reflect request origin
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+  // Allow localhost (dev)
+  if (
+    origin?.startsWith("http://localhost") ||
+    origin?.endsWith(".vercel.app")
+  ) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,DELETE,OPTIONS"
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+  }
+
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 
 /* ===============================
    MIDDLEWARE
