@@ -10,15 +10,30 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 /* ===============================
-   CORS — SIMPLE & CORRECT
+   CORS — FINAL & CORRECT
+   - Allows localhost (dev)
+   - Allows ALL *.vercel.app (preview + prod)
+   - Blocks everything else
 ================================ */
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://ai-image-generation-saas-platform.vercel.app",
-    ],
+    origin: (origin, callback) => {
+      // allow requests with no origin (curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // allow localhost (development)
+      if (origin.startsWith("http://localhost")) {
+        return callback(null, true);
+      }
+
+      // allow all Vercel deployments (preview + production)
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      // otherwise block
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -47,7 +62,7 @@ const startServer = async () => {
     console.log("✅ MongoDB Connected");
 
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on http://65.1.107.122:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   } catch (err) {
     console.error("❌ Server failed:", err.message);
