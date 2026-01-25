@@ -1,24 +1,13 @@
 import express from "express";
-import "dotenv/config";
-
-import connectDB from "./config/mongodb.js";
-import userRouter from "./routes/userRouter.js";
-import imageRouter from "./routes/imageRoutes.js";
-
-const app = express();
-const PORT = process.env.PORT || 4000;
 
 /* ===============================
-   MANUAL CORS (NO cors PACKAGE)
-   - Allows localhost
-   - Allows ALL *.vercel.app
-   - Works with credentials
-   - Handles OPTIONS properly
+   🔥 MANUAL CORS — MUST BE FIRST
 ================================ */
+const app = express();
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  // Allow localhost (dev) and all Vercel domains (preview + prod)
   if (
     origin &&
     (origin.startsWith("http://localhost") ||
@@ -36,7 +25,6 @@ app.use((req, res, next) => {
     );
   }
 
-  // Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -45,13 +33,17 @@ app.use((req, res, next) => {
 });
 
 /* ===============================
-   BODY PARSER
+   EVERYTHING ELSE AFTER
 ================================ */
+import "dotenv/config";
+import connectDB from "./config/mongodb.js";
+import userRouter from "./routes/userRouter.js";
+import imageRouter from "./routes/imageRoutes.js";
+
+const PORT = process.env.PORT || 4000;
+
 app.use(express.json());
 
-/* ===============================
-   ROUTES
-================================ */
 app.use("/api/users", userRouter);
 app.use("/api/image", imageRouter);
 
@@ -59,9 +51,6 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-/* ===============================
-   START SERVER
-================================ */
 const startServer = async () => {
   try {
     await connectDB();
