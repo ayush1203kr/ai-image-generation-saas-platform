@@ -10,33 +10,24 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 /* ===============================
-   CORS — FINAL & CORRECT
-   - Allows localhost (dev)
-   - Allows ALL *.vercel.app (preview + prod)
-   - Blocks everything else
+   CORS — FINAL & BULLETPROOF
 ================================ */
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // allow requests with no origin (curl, server-to-server)
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // curl, server-side
+    if (origin.startsWith("http://localhost")) return callback(null, true);
+    if (origin.endsWith(".vercel.app")) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-      // allow localhost (development)
-      if (origin.startsWith("http://localhost")) {
-        return callback(null, true);
-      }
+app.use(cors(corsOptions));
 
-      // allow all Vercel deployments (preview + production)
-      if (origin.endsWith(".vercel.app")) {
-        return callback(null, true);
-      }
-
-      // otherwise block
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
+/* 🔥 THIS IS CRITICAL */
+app.options("*", cors(corsOptions)); // <-- handles preflight properly
 
 /* ===============================
    MIDDLEWARE
@@ -50,7 +41,7 @@ app.use("/api/users", userRouter);
 app.use("/api/image", imageRouter);
 
 app.get("/", (req, res) => {
-  res.send("API is live 🚀");
+  res.send("API is running...");
 });
 
 /* ===============================
